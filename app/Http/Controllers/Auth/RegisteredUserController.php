@@ -9,7 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -29,11 +29,19 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+
+    $request->validate([
+        'username' => ['required', 'string', 'max:255', 'unique:users', 'alpha_num','min:5','max:20',
+    ],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+        'password' => ['required','confirmed', Password::min(8) // Minimum length of 8 characters
+                ->mixedCase() // Must include both uppercase and lowercase letters
+                ->letters() // Must include at least one letter
+                ->numbers() // Must include at least one number
+                ->symbols() // Must include at least one symbol
+                ->uncompromised(), // Ensure the password has not been compromised in data breaches
+                ],
+            ]);
 
         $user = User::create([
             'email' => $request->email,
